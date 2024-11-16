@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeGuard - Women's Safety Portal</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #1f2937;
+      /* Unified dark mode background */
+      color: #e5e7eb;
+      /* Unified light text color */
+      font-family: 'Inter', sans-serif;
+      /* Optional - common font across pages */
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      margin-bottom: 10px;
+    }
+
+    #menubar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(135deg, rgba(26, 35, 126, 0.9), rgba(49, 27, 146, 0.9));
+      padding: 12px 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      z-index: 0;
+      margin-bottom: 10px;
+    }
+
+    .dark-gradient-bg {
+      background: linear-gradient(135deg, #334155 0%, #1f2937 100%);
+    }
+
+    .nav-link {
+      color: #e5e7eb;
+      transition: color 0.3s ease;
+    }
+
+    .nav-link:hover {
+      color: #60a5fa;
+      /* Accent color hover effect */
+    }
+
+    .card-hover:hover {
+      transform: translateY(-5px);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .emergency-button {
+      animation: pulse 2s infinite;
+      background-color: #f87171;
+      color: #1f2937;
+    }
+
+    .emergency-button:hover {
+      background-color: #ef4444;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    .card-dark {
+      background-color: #2d3748;
+      color: #e5e7eb;
+      border: 1px solid #4b5563;
+    }
+
+    .common-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navigation -->
+  <nav id="menubar" class="dark-gradient-bg text-white shadow-lg">
+    <div id="menu" class="common-container flex items-center justify-between py-4">
+      <div class="flex items-center">
+        <i class="fas fa-shield-alt text-2xl mr-2"></i>
+        <span class="font-bold text-xl">SafeGuard</span>
+      </div>
+      <div>
+        <a href="page_one.html" class="nav-link mx-2">Navigation</a>
+      </div>
+    </div>
+  </nav>
+<br/><br/><br/><br/><br/>
+  <!-- Hero Section -->
+  <div class="common-container py-16">
+    <div class="flex flex-col md:flex-row items-center">
+      <div class="md:w-1/2">
+        <h1 class="text-4xl md:text-5xl font-bold mb-6">Your Safety Matters</h1>
+        <p class="mb-8">Empowering women with knowledge, resources, and tools for personal safety. Stay informed, stay
+          prepared, stay safe.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Safety Tips Section -->
+  <div class="py-16" id="safety-tips">
+    <div class="common-container">
+      <h2 class="text-3xl font-bold text-center mb-12">Essential Safety Tips</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 safety-grid">
+        <div class="rounded-lg shadow-lg p-6 card-hover card-dark">
+          <i class="fas fa-mobile-alt text-4xl text-blue-400 mb-4"></i>
+          <h3 class="text-xl font-bold mb-4">Stay Connected</h3>
+          <ul class="space-y-2">
+            <li>• Keep your phone charged and accessible</li>
+            <li>• Share your location with trusted contacts</li>
+            <li>• Install safety apps and emergency numbers</li>
+          </ul>
+        </div>
+        <div class="rounded-lg shadow-lg p-6 card-hover card-dark">
+          <i class="fas fa-street-view text-4xl text-blue-400 mb-4"></i>
+          <h3 class="text-xl font-bold mb-4">Public Safety</h3>
+          <ul class="space-y-2">
+            <li>• Stay aware of your surroundings</li>
+            <li>• Walk confidently and stay in well-lit areas</li>
+            <li>• Trust your instincts</li>
+          </ul>
+        </div>
+        <div class="rounded-lg shadow-lg p-6 card-hover card-dark">
+          <i class="fas fa-users text-4xl text-blue-400 mb-4"></i>
+          <h3 class="text-xl font-bold mb-4">Workplace Safety</h3>
+          <ul class="space-y-2">
+            <li>• Know your rights and company policies</li>
+            <li>• Report harassment immediately</li>
+            <li>• Document any concerning incidents</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="dark-gradient-bg text-white py-8">
+    <div class="common-container">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <h3 class="font-bold text-xl mb-2">SafeGuard</h3>
+          <p class="text-sm">Empowering women's safety through technology</p>
+        </div>
+      </div>
+      <div class="mt-8 text-center text-sm">
+        <p>&copy; 2024 SafeGuard. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+
+</html>

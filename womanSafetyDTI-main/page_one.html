@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Women Safety</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      overflow: hidden;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    #menubar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(135deg, rgba(26, 35, 126, 0.9), rgba(49, 27, 146, 0.9));
+      padding: 12px 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      z-index: 2;
+    }
+
+    ul#menu {
+      display: flex;
+      justify-content: center;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    #menu li {
+      margin: 0 10px;
+    }
+
+    #menu a {
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      transition: all 0.3s;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    #menu a:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    #menu .selected a {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .control-buttons {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      z-index: 2;
+    }
+
+    .sos-button {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff4444, #cc0000);
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 4px 15px rgba(204, 0, 0, 0.3);
+      transition: all 0.3s;
+    }
+
+    .sos-button:hover {
+      transform: scale(1.05);
+    }
+
+    .sos-button.stop {
+      background: linear-gradient(135deg, #666, #444);
+    }
+
+    .marker-controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    .marker-button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s;
+      font-size: 20px;
+    }
+
+    #addMarker {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+    }
+
+    #deleteMarker {
+      background: linear-gradient(135deg, #f44336, #d32f2f);
+    }
+
+    .marker-button:hover {
+      transform: scale(1.1);
+    }
+
+    .marker-button.active {
+      background: #666;
+      transform: scale(0.95);
+    }
+
+    .mode-indicator {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      border-radius: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      font-size: 14px;
+      z-index: 2;
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .control-buttons {
+        bottom: 20px;
+        right: 20px;
+      }
+
+      .sos-button {
+        width: 60px;
+        height: 60px;
+        font-size: 16px;
+      }
+
+      .marker-button {
+        width: 35px;
+        height: 35px;
+      }
+
+      #menu li {
+        margin: 0 5px;
+      }
+
+      #menu a {
+        padding: 8px 15px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="menubar">
+    <ul id="menu">
+      <li><a href="index.html">Welcome Page</a></li>
+      <li><a href="page_one.html">Navigation</a></li>
+    </ul>
+  </div>
+
+  <div class="mode-indicator" id="modeIndicator"></div>
+  <div id="map"></div>
+
+  <div class="control-buttons">
+    <button class="sos-button" id="sosButton" onclick="toggleSiren()">SOS</button>
+    <div class="marker-controls">
+      <button class="marker-button" id="addMarker" title="Add Marker">+</button>
+      <button class="marker-button" id="deleteMarker" title="Delete Marker">-</button>
+    </div>
+  </div>
+
+  <audio id="audio" src="images/siren.mp3"></audio>
+
+  <script>
+    var map, audio, sosButton;
+    var markers = [];
+    var isMarkerPlacementEnabled = false;
+    var isDeleteMode = false;
+    var userPosition;
+
+    function showModeIndicator(text) {
+      document.getElementById('modeIndicator').textContent = text;
+      document.getElementById('modeIndicator').style.display = 'block';
+    }
+
+    function hideModeIndicator() {
+      document.getElementById('modeIndicator').style.display = 'none';
+    }
+
+    function loadMarkers() {
+      const savedMarkers = localStorage.getItem('safetyMarkers');
+      if (savedMarkers) {
+        const positions = JSON.parse(savedMarkers);
+        positions.forEach(pos => {
+          placeMarker(new google.maps.LatLng(pos.lat, pos.lng), false);
+        });
+      }
+    }
+
+    function saveMarkers() {
+      const positions = markers.map(marker => ({
+        lat: marker.getPosition().lat(),
+        lng: marker.getPosition().lng()
+      }));
+      localStorage.setItem('safetyMarkers', JSON.stringify(positions));
+    }
+
+    function initMap() {
+      var origin = { lat: 25.4304, lng: 81.7708 };
+
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: origin,
+        zoom: 15,
+        styles: [
+          {
+            featureType: "poi",
+            elementType: "labels",
+            stylers: [{ visibility: "off" }]
+          }
+        ]
+      });
+
+      document.getElementById('addMarker').addEventListener('click', toggleAddMode);
+      document.getElementById('deleteMarker').addEventListener('click', toggleDeleteMode);
+
+      loadMarkers();
+      setupGeolocation();
+    }
+
+    function setupGeolocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            userPosition = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+
+            new google.maps.Marker({
+              position: userPosition,
+              map: map,
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: '#4285F4',
+                fillOpacity: 1,
+                strokeColor: '#ffffff',
+                strokeWeight: 2
+              },
+              title: 'Your Location'
+            });
+          },
+          function () {
+            handleLocationError(true, map.getCenter());
+          }
+        );
+      }
+    }
+
+    function toggleAddMode() {
+      isDeleteMode = false;
+      document.getElementById('deleteMarker').classList.remove('active');
+
+      isMarkerPlacementEnabled = !isMarkerPlacementEnabled;
+      document.getElementById('addMarker').classList.toggle('active');
+
+      google.maps.event.clearListeners(map, 'click');
+      markers.forEach(marker => {
+        google.maps.event.clearListeners(marker, 'click');
+      });
+
+      if (isMarkerPlacementEnabled) {
+        document.body.style.cursor = 'crosshair';
+        showModeIndicator('Click on the map to add a marker');
+
+        map.addListener('click', function (event) {
+          placeMarker(event.latLng, true);
+          isMarkerPlacementEnabled = false;
+          document.getElementById('addMarker').classList.remove('active');
+          document.body.style.cursor = 'default';
+          hideModeIndicator();
+          google.maps.event.clearListeners(map, 'click');
+        });
+      } else {
+        document.body.style.cursor = 'default';
+        hideModeIndicator();
+      }
+    }
+
+    function toggleDeleteMode() {
+      isMarkerPlacementEnabled = false;
+      document.getElementById('addMarker').classList.remove('active');
+
+      isDeleteMode = !isDeleteMode;
+      document.getElementById('deleteMarker').classList.toggle('active');
+
+      google.maps.event.clearListeners(map, 'click');
+
+      if (isDeleteMode) {
+        showModeIndicator('Click on a marker to delete it');
+        markers.forEach(marker => {
+          marker.setClickable(true);
+          google.maps.event.addListener(marker, 'click', function () {
+            if (isDeleteMode) {
+              deleteMarker(marker);
+            }
+          });
+        });
+      } else {
+        hideModeIndicator();
+        markers.forEach(marker => {
+          google.maps.event.clearListeners(marker, 'click');
+        });
+      }
+    }
+
+    function placeMarker(position, shouldSave = true) {
+      var marker = new google.maps.Marker({
+        position: position,
+        map: map,
+        icon: {
+          url: 'images/red_marker.png',
+          scaledSize: new google.maps.Size(30, 30),
+          anchor: new google.maps.Point(15, 30)
+        },
+        animation: google.maps.Animation.DROP
+      });
+
+      markers.push(marker);
+
+      if (shouldSave) {
+        saveMarkers();
+        checkNearbyMarkers(position);
+      }
+    }
+
+    function deleteMarker(marker) {
+      const index = markers.indexOf(marker);
+      if (index > -1) {
+        markers.splice(index, 1);
+        marker.setMap(null);
+        saveMarkers();
+      }
+    }
+
+    function checkNearbyMarkers(markerPosition) {
+      if (userPosition) {
+        var distance = google.maps.geometry.spherical.computeDistanceBetween(
+          new google.maps.LatLng(userPosition),
+          markerPosition
+        );
+        if (distance <= 50) {
+          alert("Warning! You are within 50 meters of a marked location.");
+        }
+      }
+    }
+
+    const emergencyContacts = [
+      '+918360708882',
+      '+917902844175', 
+      '+917470651181' 
+    ];
+
+    async function sendSOSMessage() {
+      if (!userPosition) {
+        alert("Unable to get your location. Please enable location services.");
+        return;
+      }
+
+      const accountSid = 'AC8b7b0e9ec369876e51045757051689d8';
+      const authToken = '15f752a86186865c7fc119ab8702341f';
+      const twilioNumber = '+13028467468';
+
+      const message = `EMERGENCY: I need help! My location: https://www.google.com/maps?q=${userPosition.lat},${userPosition.lng}`;
+
+      // Array to store the results of all message attempts
+      const results = [];
+
+      // Send messages to all emergency contacts
+      const sendPromises = emergencyContacts.map(async (contact) => {
+        try {
+          const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+              'To': contact,
+              'From': twilioNumber,
+              'Body': message
+            })
+          });
+
+          const data = await response.json();
+          if (data.sid) {
+            results.push({ contact, success: true });
+          } else {
+            results.push({ contact, success: false, error: 'Failed to send' });
+          }
+        } catch (error) {
+          results.push({ contact, success: false, error: error.message });
+          console.error(`Error sending to ${contact}:`, error);
+        }
+      });
+
+      // Wait for all messages to be sent
+      await Promise.all(sendPromises);
+
+      // Count successful and failed attempts
+      const successful = results.filter(r => r.success).length;
+      const failed = results.filter(r => !r.success).length;
+
+      // Show appropriate message to user
+      if (successful === emergencyContacts.length) {
+        alert('Emergency messages sent successfully to all contacts!');
+      } else if (successful > 0) {
+        alert(`Emergency messages sent to ${successful} out of ${emergencyContacts.length} contacts.`);
+      } else {
+        alert('Failed to send emergency messages. Trying fallback method...');
+
+        // Fallback to native SMS for all contacts
+        try {
+          const smsUris = emergencyContacts.map(contact => {
+            if (/android/i.test(navigator.userAgent)) {
+              return `sms:${contact}?body=${encodeURIComponent(message)}`;
+            } else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+              return `sms:${contact}&body=${encodeURIComponent(message)}`;
+            }
+            return null;
+          }).filter(uri => uri !== null);
+
+          if (smsUris.length > 0) {
+            // Open SMS app for the first contact
+            window.location.href = smsUris[0];
+
+            if (smsUris.length > 1) {
+              alert('Please send the emergency message to other contacts as well after sending to the first contact.');
+            }
+          } else {
+            // If no SMS URI could be generated, show manual instructions
+            const contactsList = emergencyContacts.join('\n');
+            alert(`Please send this message manually to:\n\n${contactsList}\n\nMessage: ${message}`);
+          }
+        } catch (error) {
+          alert('Unable to send messages. Please call your emergency contacts directly.');
+        }
+      }
+    }
+
+    function toggleSiren() {
+      audio = document.getElementById("audio");
+      sosButton = document.getElementById("sosButton");
+
+      if (audio.paused) {
+        audio.play();
+        sosButton.textContent = "STOP";
+        sosButton.classList.add("stop");
+        sendSOSMessage(); // Send SOS message when siren is activated
+      } else {
+        audio.pause();
+        audio.currentTime = 0;
+        sosButton.textContent = "SOS";
+        sosButton.classList.remove("stop");
+      }
+    }
+
+    function handleLocationError(browserHasGeolocation, pos) {
+      alert(browserHasGeolocation ?
+        "Error: The Geolocation service failed." :
+        "Error: Your browser doesn't support geolocation.");
+    }
+  </script>
+
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVIYLigzGN7DrO2N5WiVQkX-FHlgwbJ-s&callback=initMap&libraries=geometry"></script>
+</body>
+
+</html>
