@@ -208,6 +208,7 @@
   <audio id="audio" src="images/siren.mp3"></audio>
 
   <script>
+    require('dotenv').config();
     var map, audio, sosButton;
     var markers = [];
     var isMarkerPlacementEnabled = false;
@@ -403,9 +404,9 @@
         return;
       }
 
-      const accountSid = 'AC8b7b0e9ec369876e51045757051689d8';
-      const authToken = '15f752a86186865c7fc119ab8702341f';
-      const twilioNumber = '+13028467468';
+      const accountSid = process.env.TWILIO_ACCOUNT_SID;
+      const authToken = process.env.TWILIO_AUTH_TOKEN;
+      const twilioNumber = process.env.TWILIO_NUMBER;
 
       const message = `EMERGENCY: I need help! My location: https://www.google.com/maps?q=${userPosition.lat},${userPosition.lng}`;
 
