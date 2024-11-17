@@ -14,7 +14,7 @@
     "mongoose": "^8.8.1"
   },
   "engines": {
-    "node": ">=14.x"
+    "node": ">=14.0.0"
   },
   "license": "MIT"
 }
