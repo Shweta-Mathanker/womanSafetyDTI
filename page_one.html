@@ -215,8 +215,7 @@
     var isDeleteMode = false;
     var userPosition;
 
-    const API_URL = process.env.API_URL;
-    const twilio = require('twilio');
+    const API_URL = "https://womansafetydti.onrender.com";
 
     function showModeIndicator(text) {
       document.getElementById('modeIndicator').textContent = text;
@@ -248,12 +247,16 @@
     async function loadMarkersFromServer() {
       try {
         const response = await fetch(`${API_URL}/api/locations`);
+        if (!response.ok) {
+          throw new Error(`Failed to load markers: ${response.statusText}`);
+        }
         const locations = await response.json();
         locations.forEach(location => {
           placeMarker(new google.maps.LatLng(location.latitude, location.longitude), false);
         });
       } catch (error) {
         console.error('Error loading markers:', error);
+        alert('Unable to load location markers. Please try again later.');
       }
     }
 
@@ -324,8 +327,9 @@
               title: 'Your Location'
             });
           },
-          function () {
-            handleLocationError(true, map.getCenter());
+          function (error) {
+            console.error("Geolocation error:", error);
+            alert("Location access is required for this feature. Please enable location services.");
           }
         );
       }
@@ -403,7 +407,7 @@
       markers.push(marker);
 
       if (shouldSave) {
-        saveMarkersToServer();
+        saveMarkerToServer(position);
         checkNearbyMarkers(position);
       }
     }
