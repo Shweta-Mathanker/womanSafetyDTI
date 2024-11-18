@@ -121,8 +121,7 @@ app.post('/send-sos', async (req, res) => {
   const emergencyContacts = [
     '+918360708882',
     '+917902844175',
-    '+917470651181',
-    '+918413933978'
+    '+917470651181'
   ];
 
   const message = `EMERGENCY: I need help! My location: https://www.google.com/maps?q=${latitude},${longitude}`;
