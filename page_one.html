@@ -523,7 +523,8 @@
       }
 
       try {
-        const response = await fetch('https://womansafetydti.onrender.com/send-sos', {
+        console.log("Sending SOS request...");
+        const response = await fetch(`${API_URL}/send-sos`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -535,6 +536,7 @@
         });
 
         const data = await response.json();
+        console.log("SOS response:", data);
 
         if (data.success && !data.partial) {
           alert('Emergency messages sent successfully to all contacts!');
@@ -545,36 +547,70 @@
         }
       } catch (error) {
         console.error('Error sending SOS:', error);
-        alert('Failed to send emergency messages. Trying fallback method...');
-
-        // Your existing fallback code remains exactly the same
-        const message = `EMERGENCY: I need help! My location: https://www.google.com/maps?q=${userPosition.lat},${userPosition.lng}`;
-        
-        try {
-          const smsUris = emergencyContacts.map(contact => {
-            if (/android/i.test(navigator.userAgent)) {
-              return `sms:${contact}?body=${encodeURIComponent(message)}`;
-            } else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
-              return `sms:${contact}&body=${encodeURIComponent(message)}`;
-            }
-            return null;
-          }).filter(uri => uri !== null);
-
-          if (smsUris.length > 0) {
-            window.location.href = smsUris[0];
-
-            if (smsUris.length > 1) {
-              alert('Please send the emergency message to other contacts as well after sending to the first contact.');
-            }
-          } else {
-            const contactsList = emergencyContacts.join('\n');
-            alert(`Please send this message manually to:\n\n${contactsList}\n\nMessage: ${message}`);
-          }
-        } catch (error) {
-          alert('Unable to send messages. Please call your emergency contacts directly.');
-        }
+        alert('Failed to send emergency messages. Please check your connection or try again.');
       }
     }
+
+
+    // async function sendSOSMessage() {
+    //   if (!userPosition) {
+    //     alert("Unable to get your location. Please enable location services.");
+    //     return;
+    //   }
+
+    //   try {
+    //     const response = await fetch('https://womansafetydti.onrender.com/send-sos', {
+    //       method: 'POST',
+    //       headers: {
+    //         'Content-Type': 'application/json',
+    //       },
+    //       body: JSON.stringify({
+    //         latitude: userPosition.lat,
+    //         longitude: userPosition.lng
+    //       })
+    //     });
+
+    //     const data = await response.json();
+
+    //     if (data.success && !data.partial) {
+    //       alert('Emergency messages sent successfully to all contacts!');
+    //     } else if (data.success && data.partial) {
+    //       alert(`Emergency messages sent to ${data.successful} out of ${data.total} contacts.`);
+    //     } else {
+    //       throw new Error('Failed to send messages');
+    //     }
+    //   } catch (error) {
+    //     console.error('Error sending SOS:', error);
+    //     alert('Failed to send emergency messages. Trying fallback method...');
+
+    //     // Your existing fallback code remains exactly the same
+    //     const message = `EMERGENCY: I need help! My location: https://www.google.com/maps?q=${userPosition.lat},${userPosition.lng}`;
+        
+    //     try {
+    //       const smsUris = emergencyContacts.map(contact => {
+    //         if (/android/i.test(navigator.userAgent)) {
+    //           return `sms:${contact}?body=${encodeURIComponent(message)}`;
+    //         } else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+    //           return `sms:${contact}&body=${encodeURIComponent(message)}`;
+    //         }
+    //         return null;
+    //       }).filter(uri => uri !== null);
+
+    //       if (smsUris.length > 0) {
+    //         window.location.href = smsUris[0];
+
+    //         if (smsUris.length > 1) {
+    //           alert('Please send the emergency message to other contacts as well after sending to the first contact.');
+    //         }
+    //       } else {
+    //         const contactsList = emergencyContacts.join('\n');
+    //         alert(`Please send this message manually to:\n\n${contactsList}\n\nMessage: ${message}`);
+    //       }
+    //     } catch (error) {
+    //       alert('Unable to send messages. Please call your emergency contacts directly.');
+    //     }
+    //   }
+    // }
 
     function toggleSiren() {
       audio = document.getElementById("audio");

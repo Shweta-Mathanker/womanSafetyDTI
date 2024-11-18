@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const twilio = require('twilio');
 
 require('dotenv').config();
 
@@ -104,6 +105,66 @@ app.post('/api/locations', async (req, res) => {
   } catch (error) {
     console.error('Error saving location:', error);
     res.status(500).json({ error: 'Failed to save location' });
+  }
+});
+
+app.post('/send-sos', async (req, res) => {
+  const { latitude, longitude } = req.body;
+
+  if (!latitude || !longitude) {
+    return res.status(400).json({ error: 'Location data is required' });
+  }
+
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const twilioNumber = process.env.TWILIO_NUMBER;
+  const emergencyContacts = [
+    '+918360708882',
+    '+917902844175',
+    '+917470651181',
+    '+918413933978'
+  ];
+
+  const message = `EMERGENCY: I need help! My location: https://www.google.com/maps?q=${latitude},${longitude}`;
+
+  const results = [];
+
+  for (const contact of emergencyContacts) {
+    try {
+      const client = twilio(accountSid, authToken);
+      const twilioResponse = await client.messages.create({
+        body: message,
+        to: contact,
+        from: twilioNumber
+      });
+
+      if (twilioResponse.sid) {
+        results.push({ contact, success: true });
+      } else {
+        results.push({ contact, success: false, error: 'Failed to send' });
+      }
+    } catch (error) {
+      results.push({ contact, success: false, error: error.message });
+      console.error(`Error sending to ${contact}:`, error);
+    }
+  }
+
+  const successful = results.filter(r => r.success).length;
+
+  if (successful === emergencyContacts.length) {
+    res.json({ success: true, message: 'All messages sent successfully' });
+  } else if (successful > 0) {
+    res.json({
+      success: true,
+      partial: true,
+      successful,
+      total: emergencyContacts.length
+    });
+  } else {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send any messages'
+    });
   }
 });
 
