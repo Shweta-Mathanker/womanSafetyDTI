@@ -15,11 +15,12 @@ const PORT = process.env.PORT || 3000;
 // Configure CORS to allow requests from your frontend
 app.use(cors({
   origin: '*', // During development, you can use * 
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'DELETE'],
   allowedHeaders: ['Content-Type']
 }));
 
 app.use(bodyParser.json());
+app.options('*', cors());
 
 // Add a basic route to test if the server is running
 app.get('/', (req, res) => {
