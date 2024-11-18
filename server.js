@@ -108,6 +108,29 @@ app.post('/api/locations', async (req, res) => {
   }
 });
 
+// DELETE /api/locations - Remove a pinned location by latitude and longitude
+app.delete('/api/locations', async (req, res) => {
+  const { latitude, longitude } = req.body;
+
+  if (!latitude || !longitude) {
+    return res.status(400).json({ error: 'Latitude and longitude are required for deletion' });
+  }
+
+  try {
+    const result = await Location.findOneAndDelete({ latitude, longitude });
+    if (result) {
+      // Notify clients via SSE about the deletion
+      broadcast({ type: 'DELETE_MARKER', data: { latitude, longitude } });
+      res.json({ success: true, message: 'Marker deleted successfully' });
+    } else {
+      res.status(404).json({ error: 'Marker not found' });
+    }
+  } catch (error) {
+    console.error('Error deleting marker:', error);
+    res.status(500).json({ error: 'Failed to delete marker' });
+  }
+});
+
 app.post('/send-sos', async (req, res) => {
   const { latitude, longitude } = req.body;
 

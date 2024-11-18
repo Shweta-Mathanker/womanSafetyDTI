@@ -345,17 +345,27 @@
         if (message.type === 'NEW_MARKER') {
           const { latitude, longitude } = message.data;
           placeMarker(new google.maps.LatLng(latitude, longitude), false);
+        } else if (message.type === 'DELETE_MARKER') {
+          const { latitude, longitude } = message.data;
+
+          // Find the marker to delete
+          const markerToDelete = markers.find(marker =>
+            marker.getPosition().lat() === latitude &&
+            marker.getPosition().lng() === longitude
+          );
+
+          if (markerToDelete) {
+            const index = markers.indexOf(markerToDelete);
+            if (index > -1) {
+              markers.splice(index, 1);
+              markerToDelete.setMap(null);
+            }
+          }
         }
       } catch (error) {
         console.error('Error parsing SSE message:', error);
       }
     };
-
-    // Optional: Handle SSE errors
-    eventSource.onerror = (error) => {
-      console.error('SSE error:', error);
-    };
-
 
     function toggleAddMode() {
       isDeleteMode = false;
@@ -434,14 +444,47 @@
       }
     }
 
-    function deleteMarker(marker) {
-      const index = markers.indexOf(marker);
-      if (index > -1) {
-        markers.splice(index, 1);
-        marker.setMap(null);
-        saveMarkers();
+    async function deleteMarker(marker) {
+      const position = marker.getPosition();
+      const latitude = position.lat();
+      const longitude = position.lng();
+
+      try {
+        const response = await fetch(`${API_URL}/api/locations`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ latitude, longitude }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete marker');
+        }
+
+        // Remove marker from the frontend
+        const index = markers.indexOf(marker);
+        if (index > -1) {
+          markers.splice(index, 1);
+          marker.setMap(null); // Remove from map
+        }
+
+        console.log('Marker deleted successfully');
+      } catch (error) {
+        console.error('Error deleting marker:', error);
+        alert('Failed to delete marker from server');
       }
     }
+
+
+    // function deleteMarker(marker) {
+    //   const index = markers.indexOf(marker);
+    //   if (index > -1) {
+    //     markers.splice(index, 1);
+    //     marker.setMap(null);
+    //     saveMarkers();
+    //   }
+    // }
 
     function checkNearbyMarkers(markerPosition) {
       if (userPosition) {
