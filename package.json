@@ -3,11 +3,8 @@
   "version": "1.0.0",
   "description": "Women's Safety Web App Backend",
   "main": "server.js",
-  "homepage": "https://ezrakim09.github.io/womanSafetyDTI",
   "scripts": {
-    "start": "node server.js",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "start": "node server.js"
   },
   "dependencies": {
     "body-parser": "^1.20.3",
@@ -17,11 +14,8 @@
     "mongoose": "^8.8.1",
     "twilio": "^5.3.6"
   },
-  "devDependencies": {
-    "gh-pages": "^6.0.0"
-  },
   "engines": {
-    "node": "16.x"
+    "node": "18.x"
   },
   "license": "MIT"
 }
