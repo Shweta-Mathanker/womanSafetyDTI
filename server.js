@@ -45,6 +45,31 @@ const locationSchema = new mongoose.Schema({
 
 const Location = mongoose.model('Location', locationSchema);
 
+// --- Server-Sent Events (SSE) setup ---
+let clients = [];
+
+// SSE endpoint
+app.get('/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders(); // Send headers to establish SSE connection
+
+  // Add this client to the clients array
+  const client = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+  clients.push(client);
+
+  // Remove the client on connection close
+  req.on('close', () => {
+    clients = clients.filter(c => c !== client);
+  });
+});
+
+// Broadcast function to notify all connected clients
+function broadcast(data) {
+  clients.forEach(client => client(data));
+}
+
 // Routes
 // GET /api/locations - Retrieve all pinned locations
 app.get('/api/locations', async (req, res) => {
@@ -73,6 +98,8 @@ app.post('/api/locations', async (req, res) => {
       description: description || '' 
     });
     await newLocation.save();
+    // Notify all connected SSE clients
+    broadcast({ type: 'NEW_MARKER', data: newLocation });
     res.status(201).json(newLocation);
   } catch (error) {
     console.error('Error saving location:', error);

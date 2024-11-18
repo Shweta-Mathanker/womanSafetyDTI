@@ -335,6 +335,24 @@
       }
     }
 
+    // Connect to the SSE endpoint
+    const eventSource = new EventSource('https://womansafetydti.onrender.com');
+
+    // Listen for new marker events
+    eventSource.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      if (message.type === 'NEW_MARKER') {
+        const { latitude, longitude } = message.data;
+        placeMarker(new google.maps.LatLng(latitude, longitude), false);
+      }
+    };
+
+    // Optional: Handle SSE errors
+    eventSource.onerror = (error) => {
+      console.error('SSE error:', error);
+    };
+
+
     function toggleAddMode() {
       isDeleteMode = false;
       document.getElementById('deleteMarker').classList.remove('active');
