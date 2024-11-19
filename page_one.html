@@ -426,6 +426,15 @@
     }
 
     function placeMarker(position, shouldSave = true) {
+
+        const markerExists = markers.some(marker => 
+          marker.getPosition().lat() === position.lat() &&
+          marker.getPosition().lng() === position.lng()
+        );
+        if (markerExists && !shouldSave) {
+          return;
+        }
+      
       var marker = new google.maps.Marker({
         position: position,
         map: map,
