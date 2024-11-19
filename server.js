@@ -142,6 +142,13 @@ app.delete('/api/locations', async (req, res) => {
 app.post('/send-sos', async (req, res) => {
   const { latitude, longitude } = req.body;
 
+  console.log("Received SOS request with:", { latitude, longitude });
+  console.log("Twilio Credentials:", {
+    accountSid: process.env.TWILIO_ACCOUNT_SID,
+    authToken: process.env.TWILIO_AUTH_TOKEN ? "Loaded" : "Missing",
+    twilioNumber: process.env.TWILIO_NUMBER,
+  });
+
   if (!latitude || !longitude) {
     return res.status(400).json({ error: 'Location data is required' });
   }
