@@ -159,7 +159,8 @@ app.post('/send-sos', async (req, res) => {
   const emergencyContacts = [
     '+918360708882',
     '+917902844175',
-    '+917470651181'
+    '+917470651181',
+    '+918413933978'
   ];
 
   const message = `EMERGENCY: I need help! My location: https://www.google.com/maps?q=${latitude},${longitude}`;
@@ -171,8 +172,8 @@ app.post('/send-sos', async (req, res) => {
       const client = twilio(accountSid, authToken);
       const twilioResponse = await client.messages.create({
         body: message,
-        to: contact,
-        from: twilioNumber
+        from: twilioNumber,
+        to: contact
       });
 
       if (twilioResponse.sid) {

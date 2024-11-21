@@ -208,7 +208,6 @@
   <audio id="audio" src="images/siren.mp3"></audio>
 
   <script>
-    //require('dotenv').config();
     var map, audio, sosButton;
     var markers = [];
     var isMarkerPlacementEnabled = false;
@@ -225,24 +224,6 @@
     function hideModeIndicator() {
       document.getElementById('modeIndicator').style.display = 'none';
     }
-
-    // function loadMarkers() {
-    //   const savedMarkers = localStorage.getItem('safetyMarkers');
-    //   if (savedMarkers) {
-    //     const positions = JSON.parse(savedMarkers);
-    //     positions.forEach(pos => {
-    //       placeMarker(new google.maps.LatLng(pos.lat, pos.lng), false);
-    //     });
-    //   }
-    // }
-
-    // function saveMarkers() {
-    //   const positions = markers.map(marker => ({
-    //     lat: marker.getPosition().lat(),
-    //     lng: marker.getPosition().lng()
-    //   }));
-    //   localStorage.setItem('safetyMarkers', JSON.stringify(positions));
-    // }
 
     async function loadMarkersFromServer() {
       try {
@@ -490,15 +471,6 @@
       }
     }
 
-    // function deleteMarker(marker) {
-    //   const index = markers.indexOf(marker);
-    //   if (index > -1) {
-    //     markers.splice(index, 1);
-    //     marker.setMap(null);
-    //     saveMarkers();
-    //   }
-    // }
-
     function checkNearbyMarkers(markerPosition) {
       if (userPosition) {
         var distance = google.maps.geometry.spherical.computeDistanceBetween(
@@ -510,67 +482,6 @@
         }
       }
     }
-
-    const emergencyContacts = [
-      '+918360708882',
-      '+917902844175', 
-      '+917470651181',
-      '+918413933978'
-    ];
-
-    app.post('/send-sos', async (req, res) => {
-      const { latitude, longitude } = req.body;
-      
-      if (!latitude || !longitude) {
-        return res.status(400).json({ error: 'Location data is required' });
-      }
-
-      const accountSid = process.env.TWILIO_ACCOUNT_SID;
-      const authToken = process.env.TWILIO_AUTH_TOKEN;
-      const twilioNumber = process.env.TWILIO_NUMBER;
-      
-      const message = `EMERGENCY: I need help! My location: https://www.google.com/maps?q=${latitude},${longitude}`;
-      
-      const results = [];
-
-      for (const contact of emergencyContacts) {
-        try {
-          const client = twilio(accountSid, authToken);
-          const twilioResponse = await client.messages.create({
-            body: message,
-            to: contact,
-            from: twilioNumber
-          });
-
-          if (twilioResponse.sid) {
-            results.push({ contact, success: true });
-          } else {
-            results.push({ contact, success: false, error: 'Failed to send' });
-          }
-        } catch (error) {
-          results.push({ contact, success: false, error: error.message });
-          console.error(`Error sending to ${contact}:`, error);
-        }
-      }
-
-      const successful = results.filter(r => r.success).length;
-      
-      if (successful === emergencyContacts.length) {
-        res.json({ success: true, message: 'All messages sent successfully' });
-      } else if (successful > 0) {
-        res.json({ 
-          success: true, 
-          partial: true, 
-          successful,
-          total: emergencyContacts.length 
-        });
-      } else {
-        res.status(500).json({ 
-          success: false, 
-          error: 'Failed to send any messages' 
-        });
-      }
-    });
 
     async function sendSOSMessage() {
       if (!userPosition) {
@@ -587,86 +498,23 @@
           },
           body: JSON.stringify({
             latitude: userPosition.lat,
-            longitude: userPosition.lng
-          })
+            longitude: userPosition.lng,
+          }),
         });
 
         const data = await response.json();
         console.log("SOS response:", data);
 
-        if (data.success && !data.partial) {
-          alert('Emergency messages sent successfully to all contacts!');
-        } else if (data.success && data.partial) {
-          alert(`Emergency messages sent to ${data.successful} out of ${data.total} contacts.`);
+        if (data.success) {
+          alert('Emergency messages sent successfully!');
         } else {
-          throw new Error('Failed to send messages');
+          throw new Error('Failed to send SOS');
         }
       } catch (error) {
         console.error('Error sending SOS:', error);
-        alert('Failed to send emergency messages. Please check your connection or try again.');
+        alert('Failed to send SOS. Please try again.');
       }
     }
-
-
-    // async function sendSOSMessage() {
-    //   if (!userPosition) {
-    //     alert("Unable to get your location. Please enable location services.");
-    //     return;
-    //   }
-
-    //   try {
-    //     const response = await fetch('https://womansafetydti.onrender.com/send-sos', {
-    //       method: 'POST',
-    //       headers: {
-    //         'Content-Type': 'application/json',
-    //       },
-    //       body: JSON.stringify({
-    //         latitude: userPosition.lat,
-    //         longitude: userPosition.lng
-    //       })
-    //     });
-
-    //     const data = await response.json();
-
-    //     if (data.success && !data.partial) {
-    //       alert('Emergency messages sent successfully to all contacts!');
-    //     } else if (data.success && data.partial) {
-    //       alert(`Emergency messages sent to ${data.successful} out of ${data.total} contacts.`);
-    //     } else {
-    //       throw new Error('Failed to send messages');
-    //     }
-    //   } catch (error) {
-    //     console.error('Error sending SOS:', error);
-    //     alert('Failed to send emergency messages. Trying fallback method...');
-
-    //     // Your existing fallback code remains exactly the same
-    //     const message = `EMERGENCY: I need help! My location: https://www.google.com/maps?q=${userPosition.lat},${userPosition.lng}`;
-        
-    //     try {
-    //       const smsUris = emergencyContacts.map(contact => {
-    //         if (/android/i.test(navigator.userAgent)) {
-    //           return `sms:${contact}?body=${encodeURIComponent(message)}`;
-    //         } else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
-    //           return `sms:${contact}&body=${encodeURIComponent(message)}`;
-    //         }
-    //         return null;
-    //       }).filter(uri => uri !== null);
-
-    //       if (smsUris.length > 0) {
-    //         window.location.href = smsUris[0];
-
-    //         if (smsUris.length > 1) {
-    //           alert('Please send the emergency message to other contacts as well after sending to the first contact.');
-    //         }
-    //       } else {
-    //         const contactsList = emergencyContacts.join('\n');
-    //         alert(`Please send this message manually to:\n\n${contactsList}\n\nMessage: ${message}`);
-    //       }
-    //     } catch (error) {
-    //       alert('Unable to send messages. Please call your emergency contacts directly.');
-    //     }
-    //   }
-    // }
 
     function toggleSiren() {
       audio = document.getElementById("audio");
